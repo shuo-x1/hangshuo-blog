@@ -1,0 +1,8 @@
+import { prisma } from "@/lib/db";
+import { PageHeading } from "@/components/public/page-heading";
+import { Icon } from "@/components/icons";
+
+export default async function ProjectsPage(): Promise<React.JSX.Element> {
+  const projects = await prisma.project.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
+  return <div className="public-page"><PageHeading eyebrow="边想边做" title="项目" description="做过的软件、顺手的小工具，还有正在继续的尝试。" />{projects.length ? <div className="grid gap-5 md:grid-cols-2">{projects.map((project, index) => <article key={project.id} className={`glass-panel rounded-[24px_40px_24px_24px] p-7 sm:p-8 ${index % 2 ? "md:translate-y-5" : ""}`}><div className="flex items-center justify-between gap-4"><span className="rounded-full border border-line px-3 py-1.5 text-xs text-accent">{project.status || "项目"}</span><Icon name="code" className="h-7 w-7 text-muted" /></div><h2 className="mt-6 break-words font-serif text-3xl leading-relaxed text-ink">{project.name}</h2><p className="mt-3 whitespace-pre-wrap break-words text-sm leading-8 text-copy">{project.description}</p><div className="mt-6 flex flex-wrap gap-3">{([["demoUrl", "在线体验"], ["sourceUrl", "查看源码"], ["downloadUrl", "下载"]] as const).map(([field, label]) => /^https?:\/\//i.test(project[field] || "") ? <a key={field} href={project[field] || undefined} target="_blank" rel="noopener noreferrer" className="button-outline">{label}<Icon name="arrowUp" className="h-4 w-4" /></a> : null)}</div></article>)}</div> : <div className="glass-panel rounded-3xl px-7 py-16 text-center"><Icon name="code" className="mx-auto h-9 w-9 text-muted" /><h2 className="mt-5 font-serif text-2xl text-ink">新的项目，还在路上。</h2><p className="mt-4 text-sm leading-8 text-copy">有了可以分享的作品，就放在这里。</p></div>}</div>;
+}

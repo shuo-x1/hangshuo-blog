@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique @db.VarChar(80)
+  passwordHash String    @db.VarChar(255)
+  createdAt    DateTime  @default(now()) @db.DateTime(3)
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  tokenHash String   @unique @db.Char(64)
+  adminId   Int
+  expiresAt DateTime @db.DateTime(3)
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([expiresAt])
+}
+
+model Post {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  title     String   @db.VarChar(191)
+  slug      String   @unique @db.VarChar(191)
+  summary   String   @db.VarChar(600)
+  content   String   @db.LongText
+  category  String   @default("随笔") @db.VarChar(80)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@index([published, createdAt])
+}
+
+model Project {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  name        String   @db.VarChar(191)
+  status      String   @default("进行中") @db.VarChar(80)
+  description String   @db.Text
+  demoUrl     String   @default("") @db.VarChar(1000)
+  sourceUrl   String   @default("") @db.VarChar(1000)
+  downloadUrl String   @default("") @db.VarChar(1000)
+  createdAt   DateTime @default(now()) @db.DateTime(3)
+
+  @@index([createdAt])
+}
+
+model Photo {
+  id        String    @id @default(cuid()) @db.VarChar(191)
+  url       String    @db.VarChar(500)
+  caption   String    @default("") @db.VarChar(500)
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  messages  Message[]
+
+  @@index([createdAt])
+}
+
+model Message {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  name      String   @db.VarChar(30)
+  content   String   @db.Text
+  approved  Boolean  @default(false)
+  photoId   String?  @db.VarChar(191)
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  photo     Photo?   @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@index([approved, createdAt])
+  @@index([photoId, approved, createdAt])
+}
+
+model Visit {
+  id          Int      @id @default(autoincrement())
+  visitorHash String   @db.Char(64)
+  path        String   @db.VarChar(191)
+  day         String   @db.Char(10)
+  createdAt   DateTime @default(now()) @db.DateTime(3)
+
+  @@unique([visitorHash, path, day])
+  @@index([createdAt])
+}
+
+model SiteSetting {
+  id           String @id @default("site") @db.VarChar(32)
+  name         String @default("张航硕") @db.VarChar(80)
+  tagline      String @default("记录想法，创造一些有用的东西。") @db.VarChar(300)
+  about        String @default("这是我的个人空间，用来记录想法、分享作品，也认识同样热爱创造的朋友。") @db.VarChar(2000)
+  email        String @default("3217710568@qq.com") @db.VarChar(254)
+  qq           String @default("3217710568") @db.VarChar(30)
+  github       String @default("shuo-x1") @db.VarChar(80)
+  wechat       String @default("") @db.VarChar(80)
+  douyin       String @default("z1117321771") @db.VarChar(80)
+  galleryStyle String @default("carousel") @db.VarChar(30)
+}
+
+model LoginAttempt {
+  key       String   @id @db.VarChar(191)
+  attempts  Int      @default(0)
+  expiresAt DateTime @db.DateTime(3)
+
+  @@index([expiresAt])
+}
